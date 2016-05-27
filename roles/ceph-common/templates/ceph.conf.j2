@@ -8,47 +8,35 @@ auth service required = none
 auth client required = none
 auth supported = none
 {% endif %}
+{% if groups[mds_group_name] is defined %}
+{% for host in groups[mon_group_name] %}
+mon host = {{ hostvars[host]['ansible_' + (hostvars[host]['monitor_interface'] if hostvars[host]['monitor_interface'] is defined else monitor_interface) ]['ipv4']['address'] }}
+{% endfor %}
+{% endif %}
 {% if not mon_containerized_deployment_with_kv %}
 fsid = {{ fsid }}
 {% endif %}
 max open files = {{ max_open_files }}
+mon initial members = {{ hostvars[groups[mon_group_name][0]]['ansible_hostname'] }}
 {% if common_single_host_mode is defined %}
 osd crush chooseleaf type = 0
 {% endif %}
+{% if public_network is defined %}
+public_network = {{ public_network }}
+{% endif %}
+{% if cluster_network is defined %}
+cluster_network = {{ cluster_network }}
+{% endif %}
+
 [client]
 admin socket = {{ rbd_client_admin_socket_path }}/$cluster-$type.$id.$pid.$cctid.asok # must be writable by QEMU and allowed by SELinux or AppArmor
 log file = {{ rbd_client_log_file }} # must be writable by QEMU and allowed by SELinux or AppArmor
-
-[mon]
-{% if not mon_containerized_deployment_with_kv %}
-{% for host in groups[mon_group_name] %}
-{% if hostvars[host]['ansible_fqdn'] is defined and mon_use_fqdn %}
-[mon.{{ hostvars[host]['ansible_fqdn'] }}]
-host = {{ hostvars[host]['ansible_fqdn'] }}
-{% elif hostvars[host]['ansible_hostname'] is defined %}
-[mon.{{ hostvars[host]['ansible_hostname'] }}]
-host = {{ hostvars[host]['ansible_hostname'] }}
-{% endif %}
-# we need to check if monitor_interface is defined in the inventory per host or if it's set in a group_vars file
-{% if (hostvars[host]['monitor_interface'] is defined and hostvars[host]['monitor_interface'] != "interface") or monitor_interface != "interface" %}
-{% include 'mon_addr_interface.j2' %}
-{% else %}
-{% include 'mon_addr_address.j2' %}
-{% endif %}
-{% endfor %}
-{% endif %}
 
 [osd]
 osd mkfs type = {{ osd_mkfs_type }}
 osd mkfs options xfs = {{ osd_mkfs_options_xfs }}
 osd mount options xfs = {{ osd_mount_options_xfs }}
 osd journal size = {{ journal_size }}
-{% if cluster_network is defined %}
-cluster_network = {{ cluster_network }}
-{% endif %}
-{% if public_network is defined %}
-public_network = {{ public_network }}
-{% endif %}
 {% if filestore_xattr_use_omap != None %}
 filestore xattr use omap = {{ filestore_xattr_use_omap }}
 {% elif osd_mkfs_type == "ext4" %}
