@@ -21,6 +21,7 @@ MEMORY     = settings['memory']
 STORAGECTL = settings['vagrant_storagectl']
 ETH        = settings['eth']
 DOCKER     = settings['docker']
+PURGE      = settings['purge_cluster']
 
 if BOX == 'openstack'
   require 'vagrant-openstack-provider'
@@ -35,7 +36,12 @@ end
 
 ansible_provision = proc do |ansible|
   if DOCKER then
-    ansible.playbook = 'site-docker.yml'
+    if PURGE then
+      ansible.playbook = 'purge-docker-cluster.yml'
+    else
+      ansible.playbook = 'site-docker.yml'
+    end
+    ansible.verbose = "vvv"
     if settings['skip_tags']
       ansible.skip_tags = settings['skip_tags']
     end

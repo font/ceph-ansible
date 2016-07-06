@@ -8,13 +8,29 @@
 
   tasks:
 
-  - name: install the latest version of gdisk
-    package:
-      name: gdisk
-      state: present
+      #  - name: install the latest version of gdisk
+      #    yum:
+      #      name: gdisk
+      #      state: present
+
+  # osds:
+  - name: disable ceph osd service
+  - name: kill ceph osd container
+  - name: purge ceph osd disk
+  - name: purge ceph osd disk again?
+  - name: purge ceph directories
+
+  # mons:
+  - name: disable ceph mon service
+  - name: kill ceph mon container
+  - name: purge ceph directories
+
+  # ansible host:
+  - name: remove fetch directory
+
 
   - name: collect ceph containers
-    shell: docker ps -aq --filter="ancestor=ceph/daemon"
+    shell: docker ps -aq --filter "ancestor={{ ceph_mon_docker_username }}/{{ ceph_mon_docker_imagename }}"
     register: containers
 
   - name: delete ceph containers
