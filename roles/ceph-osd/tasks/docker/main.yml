@@ -1,4 +1,37 @@
 ---
+- name: debug osds
+  debug:
+    var: hostvars[inventory_hostname]
+
+- name: set fact for osd pid container device
+  set_fact:
+    pid_container_namespace: '{{ ceph_osd_docker_devices[0] | basename }}'
+
+- name: debug pid_container_namespace
+  debug:
+    var: pid_container_namespace
+
+- name: set fact for osd device count
+  set_fact:
+    osd_device_count: '{{ ceph_osd_docker_devices | length }}'
+
+- name: debug osd_device_count
+  debug:
+    var: osd_device_count
+
+- name: generate systemd unit file
+  become: true
+  template:
+    src: "{{ role_path }}/templates/ceph-osd.service.j2"
+    dest: /etc/systemd/system/ceph-osd@.service
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  failed_when: false
+
+- fail:
+    msg: "Erroring out early"
+
 - name: check if a cluster is already running
   shell: "docker ps | grep -sq '{{ceph_osd_docker_username}}/{{ceph_osd_docker_imagename}}:{{ceph_osd_docker_image_tag}}'"
   register: ceph_health

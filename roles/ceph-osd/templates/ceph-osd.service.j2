@@ -6,7 +6,14 @@ After=docker.service
 EnvironmentFile=-/etc/environment
 ExecStartPre=-/usr/bin/docker stop {{ ansible_hostname }}-osd-dev%i
 ExecStartPre=-/usr/bin/docker rm -f  {{ ansible_hostname }}-osd-dev%i
-ExecStart=/usr/bin/docker run --rm --net=host --pid=host\
+ExecStart=/usr/bin/docker run --net=host \
+   {% for dev in ceph_osd_docker_devices %}
+   {% if loop.first %}
+   {% set first_device = dev %}
+   {% else %}
+    --pid=container:{{ ansible_hostname }}-osd-dev{{ first_device | basename }} \
+   {% endif %}
+   {% endfor %}
    {% if not osd_containerized_deployment_with_kv -%}
    -v /var/lib/ceph:/var/lib/ceph \
    -v /etc/ceph:/etc/ceph \
@@ -24,8 +31,6 @@ ExecStart=/usr/bin/docker run --rm --net=host --pid=host\
    --name={{ ansible_hostname }}-osd-dev%i \
    {{ ceph_docker_registry }}/{{ ceph_osd_docker_username }}/{{ ceph_osd_docker_imagename }}:{{ ceph_osd_docker_image_tag }}
 ExecStop=-/usr/bin/docker stop {{ ansible_hostname }}-osd-dev%i
-Restart=always
-RestartSec=10s
 TimeoutStartSec=120
 TimeoutStopSec=15
 
