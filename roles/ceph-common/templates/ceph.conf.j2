@@ -55,12 +55,12 @@ fsid = {{ fsid }}
 {% if groups[mon_group_name] is defined %}
 mon host = {% for host in groups[mon_group_name] %}
              {% set interface = ["ansible_",ceph_mon_docker_interface]|join %}
-             {% if mon_containerized_deployment -%}
-                {{ hostvars[host][interface]['ipv4']['address'] }}
-             {%- elif hostvars[host]['monitor_address'] is defined -%}
+             {% if hostvars[host]['monitor_address'] is defined -%}
                 {{ hostvars[host]['monitor_address'] }}
              {%- elif monitor_address != "0.0.0.0" -%}
                 {{ monitor_address }}
+             {%- elif mon_containerized_deployment -%}
+                {{ hostvars[host][interface]['ipv4']['address'] }}
              {%- endif %}
              {%- if not loop.last %},{% endif %}
            {% endfor %}

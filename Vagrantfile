@@ -5,7 +5,7 @@ require 'yaml'
 require 'time'
 VAGRANTFILE_API_VERSION = '2'
 
-DEBUG = false
+DEBUG = true
 
 config_file=File.expand_path(File.join(File.dirname(__FILE__), 'vagrant_variables.yml'))
 settings=YAML.load_file(config_file)
